@@ -1,0 +1,34 @@
+{
+    "name": "bingcool/swoolefy-zipkin",
+    "description": "this is a call link of zipkin engine",
+    "keywords": [
+        "swoolefy",
+        "swoole",
+        "php",
+        "zipkin"
+    ],
+    "license": "MIT",
+    "type": "project",
+    "authors": [
+        {
+            "name": "bingcool",
+            "email": "2437667702@qq.com",
+            "role": "zipkin of php"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "whitemerry/phpkin": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "zipkin\\": "src/"
+        }
+    },
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    }
+}
