@@ -8,7 +8,11 @@ $zipkin = ZipkinHander::getInstance('http://192.168.99.102', '9411', false);
 
 $zipkin->setEndpoint('swoolefy service1', '192.168.99.102', 80);
 
+// 如果是根span
 $zipkin->setTracer('/Test/test');
+// 如果是下级span,也就是后端
+// $zipkin->setTracer('/Test/test', true);
+
 
 //这里开始创建一个span 
 $begainSpanInfo = $zipkin->begainSpan();
