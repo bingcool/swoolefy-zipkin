@@ -116,7 +116,7 @@ class ZipkinHander {
 		 * @param    string $remote_span_name
 		 * @return   void
 		 */
-		public function afterSpan(array $begainSpanInfo, array $remote_endpoint_info, string $remote_span_name) {
+		public function afterSpan(array $begainSpanInfo, array $remote_endpoint_info, string $remote_span_name, array $binaryAnnotations = []) {
 			list($requestStart, $spanId) = $begainSpanInfo;
 
 			list($remote_endpoint_servicename, $ip, $port) = $remote_endpoint_info;
@@ -124,7 +124,16 @@ class ZipkinHander {
 			$endpoint = new Endpoint($remote_endpoint_servicename, $ip, $port);
 
 			$annotationBlock = new AnnotationBlock($endpoint, $requestStart);
-			$span = new Span($spanId, $remote_span_name, $annotationBlock);
+
+			$meta = new Metadata();
+
+			if(!epmty($binaryAnnotations)) {
+				foreach($binaryAnnotations as $key=>$value) {
+					$meta->set($key, $value);
+				}
+			}
+
+			$span = new Span($spanId, $remote_span_name, $annotationBlock, $meta);
 			// Add span to Zipkin
 			$this->tracer->addSpan($span);
 		}
@@ -167,7 +176,6 @@ class ZipkinHander {
 		 * @param   
 		 */
 		public function __destruct() {
-			var_dump('end');
 			self::$instance = null;
 		}
 
