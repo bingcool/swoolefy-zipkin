@@ -9,6 +9,7 @@ use whitemerry\phpkin\Identifier\TraceIdentifier;
 use whitemerry\phpkin\AnnotationBlock;
 use whitemerry\phpkin\TracerInfo;
 use whitemerry\phpkin\Logger\LoggerException;
+use whitemerry\phpkin\Metadata;
 use zipkin\ZipkinHttpLogger;
 use zipkin\ZipkinTracer;
 
@@ -127,7 +128,7 @@ class ZipkinHander {
 
 			$meta = new Metadata();
 
-			if(!epmty($binaryAnnotations)) {
+			if(!empty($binaryAnnotations)) {
 				foreach($binaryAnnotations as $key=>$value) {
 					$meta->set($key, $value);
 				}

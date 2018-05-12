@@ -29,12 +29,12 @@ class ZipkinHttpLogger extends SimpleHttpLogger {
             $cli = new \swoole_http_client($this->zipkin_ip, $this->zipkin_port);
 
             $cli->setHeaders([
-                'header' => 'Content-type: application/json',
+                'header' => 'Content-type: application/x-www-form-urlencoded',
             ]);
             
-            $cli->setData(json_encode($spans));
+            // $cli->setData(json_encode($spans));
 
-            $cli->post($this->options['endpoint'], [], function ($cli) {
+            $cli->post($this->options['endpoint'], $spans, function ($cli) {
             });
             return ;
         }else {
