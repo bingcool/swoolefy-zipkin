@@ -50,7 +50,7 @@ class ZipkinHander {
 		/**
 		 * __construct 
 		 */
-		public function __construct($zipkin_host, $zipkin_port = 80, $muteErrors = true, $contextOptions = [], $endpoint = '/api/v1/spans') {
+		protected function __construct($zipkin_host, $zipkin_port = 80, $muteErrors = true, $contextOptions = [], $endpoint = '/api/v1/spans') {
 			if(strpos($zipkin_host, 'http://') !== false || strpos($zipkin_host, 'https://') !== false) {
 				$this->logger= new ZipkinHttpLogger(['host' => $zipkin_host.":".$zipkin_port, 'endpoint'=>$endpoint, 'muteErrors' => $muteErrors, 'contextOptions'=>$contextOptions]);
 			}else {
