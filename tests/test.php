@@ -4,15 +4,22 @@ require_once "../vendor/autoload.php";
 
 use zipkin\ZipkinHander;
 
-$zipkin = ZipkinHander::getInstance('http://192.168.99.102', '9411', false);
+// 根前端需要在/api/V1/span附带参数isFront=1,声明是根前端
+$zipkin = ZipkinHander::getInstance('http://192.168.99.103', '9507', true, 
+		[
+			'header'=>'Content-type: application/x-www-form-urlencoded'
+		], '/api/V1/span?isFront=1'
+	);
 
+// 当前服务的信息
 $zipkin->setEndpoint('swoolefy service1', '192.168.99.102', 80);
 
+//采样率设置必须在setTracer函数之前设置才有效,90代表90%采样率，根前端才需要设置
+$zipkin->setPercentageSampler($percents = 90);
 // 如果是根span
 $zipkin->setTracer('/Test/test');
 // 如果是下级span,也就是后端
 // $zipkin->setTracer('/Test/test', true);
-
 
 //这里开始创建一个span 
 $begainSpanInfo = $zipkin->begainSpan();

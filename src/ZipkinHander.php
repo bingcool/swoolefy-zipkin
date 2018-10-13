@@ -1,17 +1,17 @@
 <?php
 namespace zipkin;
 
+use zipkin\ZipkinTracer;
+use zipkin\ZipkinHttpLogger;
 use whitemerry\phpkin\Tracer;
-use whitemerry\phpkin\Endpoint;
 use whitemerry\phpkin\Span;
+use whitemerry\phpkin\Endpoint;
+use whitemerry\phpkin\Metadata;
+use whitemerry\phpkin\TracerInfo;
+use whitemerry\phpkin\AnnotationBlock;
+use whitemerry\phpkin\Logger\LoggerException;
 use whitemerry\phpkin\Identifier\SpanIdentifier;
 use whitemerry\phpkin\Identifier\TraceIdentifier;
-use whitemerry\phpkin\AnnotationBlock;
-use whitemerry\phpkin\TracerInfo;
-use whitemerry\phpkin\Logger\LoggerException;
-use whitemerry\phpkin\Metadata;
-use zipkin\ZipkinHttpLogger;
-use zipkin\ZipkinTracer;
 
 class ZipkinHander {
 
@@ -91,12 +91,36 @@ class ZipkinHander {
 			$isSampled = null;
 			if(!empty($_SERVER['HTTP_X_B3_SAMPLED'])) {
 			    $isSampled = (bool) $_SERVER['HTTP_X_B3_SAMPLED'];
+			}else {
+				// 根前端设置采样率
+				$isSampled = new \whitemerry\phpkin\Sampler\PercentageSampler($this->percentageSampler);
 			}
 
 			$this->tracer = new ZipkinTracer($local_span, $this->endpoint, $this->logger, $isSampled, $traceId, $traceSpanId);
 
 			!$is_back && $this->tracer->setProfile(Tracer::BACKEND);
 
+			$this->is_back = $is_back;
+
+		}
+
+		/**
+		 * setPercentageSampler 设置采样率
+		 * @param array $percents
+		 */
+		public function setPercentageSampler($percents = 100) {
+			$this->percentageSampler = ['percents'=>$percents];
+		}
+
+		/**
+		 * isFrontend 
+		 * @return boolean
+		 */
+		public function isFrontend() {
+			if(!$this->is_back) {
+				return 1;
+			}
+			return 0;
 		}
 		
 		/**

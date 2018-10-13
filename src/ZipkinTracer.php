@@ -1,10 +1,10 @@
 <?php
 namespace zipkin;
 
-use whitemerry\phpkin\tracer;
+use whitemerry\phpkin\Tracer;
 use whitemerry\phpkin\TracerInfo;
 
-class ZipkinTracer extends tracer {
+class ZipkinTracer extends Tracer {
 
 	/**
      * Save trace
