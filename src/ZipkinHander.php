@@ -137,6 +137,22 @@ class ZipkinHander {
 		}
 
 		/**
+		 * setCid
+		 * @param $cid
+		 */
+		public function setCid($cid) {
+			$this->cid = $cid;
+		}
+
+		/**
+		 * getCid
+		 * @return int
+		 */
+		public function getCid() {
+			return $this->cid;
+		}
+
+		/**
 		 * isFrontend 
 		 * @return boolean
 		 */
