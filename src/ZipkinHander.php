@@ -16,22 +16,16 @@ use whitemerry\phpkin\Identifier\TraceIdentifier;
 class ZipkinHander {
 
 		/**
+		 * $cid 协程id
+		 * @var null
+		 */
+		private $cid = null;
+
+		/**
 		 * $instance
 		 * @var [type]
 		 */
 		private static $instance;
-
-		/**
-		 * getInstance 
-		 * @param    $args
-		 * @return   mixed
-		 */
-	    public static function getInstance(...$args) {
-	        if(!isset(self::$instance)){
-	            self::$instance = new static(...$args);
-	        }
-	        return self::$instance;
-	    }
 
 	    /**
 	     * $logger 日志发送对象
@@ -45,7 +39,37 @@ class ZipkinHander {
 	     */
 	    public $endpoint = null;
 
+	    /**
+	     * $tracer
+	     * @var null
+	     */
 	    public $tracer = null;
+
+	    /**
+	     * $percentageSampler 采样率
+	     * @var array
+	     */
+	    public $percentageSampler = ['percents'=>100];
+
+	    /**
+		 * getInstance 
+		 * @param    $args
+		 * @return   mixed
+		 */
+	    public static function getInstance(...$args) {
+	    	$cid = 'cid_00';
+	    	if(class_exists('co')) {
+	    		$cid = \co::getuid();
+		    	if($cid > 0) {
+		    		$cid = 'cid_'.$cid;
+		    	}
+	    	}
+	        if(!isset(self::$instance[$cid])){
+	            self::$instance[$cid] = new static(...$args);
+	            self::$instance[$cid]->setCid($cid);
+	        }
+	        return self::$instance[$cid];
+	    }
 
 		/**
 		 * __construct 
@@ -194,6 +218,7 @@ class ZipkinHander {
 		 */
 		public function trace($is_async = false) {
 			$this->tracer->trace($is_async);
+			unset(self::$instance[$this->cid]);
 		}
 
 		/**

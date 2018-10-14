@@ -42,5 +42,10 @@ $request = file_get_contents($url, false, $context);
 $zipkin->afterSpan($begainSpanInfo, ['jsonplaceholder API', '104.31.87.157', '80'], 'posts/1');
 
 
-
+//在 php fpm中直接
 $zipkin->trace(true);
+//在swoolefy中
+// $app = \Swoolefy\Core\Application::getApp();
+// $app->afterRequest(function() use($zipkin) {
+// 	$zipkin->trace(true);
+// });
