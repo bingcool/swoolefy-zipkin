@@ -25,21 +25,16 @@ class ZipkinHttpLogger extends SimpleHttpLogger {
      * @return   
      */
     public function asyncTrace($spans) {
-        if(extension_loaded('swoole')) {
-            $cli = new \swoole_http_client($this->zipkin_ip, $this->zipkin_port);
-
+        if(extension_loaded('swoole') && defined('SWOOLEFY_ENV')) {
+            $cli = new \Swoole\Coroutine\Http\Client($this->zipkin_ip, $this->zipkin_port);
+            $cli->set([ 'timeout' => 1]);
             $cli->setHeaders([
-                'header' => 'Content-type: application/x-www-form-urlencoded',
+                'Content-type'=>'application/json',            
             ]);
-            
-            // $cli->setData(json_encode($spans));
-
-            $cli->post($this->options['endpoint'], $spans, function ($cli) {
-            });
-            return ;
+            $cli->post($this->options['endpoint'], json_encode($spans));
+            $cli->close();
         }else {
-            // 同步
             $this->trace($spans);
-        }
+        }   
     }
 }

@@ -74,9 +74,9 @@ class ZipkinHander {
 		/**
 		 * __construct 
 		 */
-		protected function __construct($zipkin_host, $zipkin_port = 80, $muteErrors = true, $contextOptions = [], $endpoint = '/api/v1/spans') {
+		protected function __construct($zipkin_host, $zipkin_port = 80, $endpoint = '/api/v1/spans', $muteErrors = true) {
 			if(strpos($zipkin_host, 'http://') !== false || strpos($zipkin_host, 'https://') !== false) {
-				$this->logger= new ZipkinHttpLogger(['host' => $zipkin_host.":".$zipkin_port, 'endpoint'=>$endpoint, 'muteErrors' => $muteErrors, 'contextOptions'=>$contextOptions]);
+				$this->logger= new ZipkinHttpLogger(['host' => $zipkin_host.":".$zipkin_port, 'endpoint'=>$endpoint, 'muteErrors' => $muteErrors, 'contextOptions'=>[]]);
 			}else {
 				throw new LoggerException('zipkin_host require a scheme of http or https');
 			}
@@ -97,34 +97,66 @@ class ZipkinHander {
 		 * setTracer 创建追踪实例
 		 * @param 本次请求的
 		 */
-		public function setTracer($local_span, $is_back = false) {
+		public function setTracer($local_span, $is_front = true, $app = null) {
 			/**
 		 	* Read headers
 		 	*/
-			$traceId = null;
+		 	$traceId = $traceSpanId = $isSampled = null;
+			if(isset($app) && is_object($app)) {
+				if($app->isHttpApp()) {
 
-			if(!empty($_SERVER['HTTP_X_B3_TRACEID'])) {
-			    $traceId = new TraceIdentifier($_SERVER['HTTP_X_B3_TRACEID']);
-			}
+					$HTTP_X_B3_TRACEID = $app->getHeaderParams('HTTP_X_B3_TRACEID');
+					if(!empty($HTTP_X_B3_TRACEID)) {
+						 $traceId = new TraceIdentifier($HTTP_X_B3_TRACEID);
+					}
 
-			$traceSpanId = null;
-			if (!empty($_SERVER['HTTP_X_B3_SPANID'])) {
-			    $traceSpanId = new SpanIdentifier($_SERVER['HTTP_X_B3_SPANID']);
-			}
+					$HTTP_X_B3_SPANID = $app->getHeaderParams('HTTP_X_B3_SPANID');
+					if(!empty($HTTP_X_B3_SPANID)) {
+						$traceSpanId = new SpanIdentifier($HTTP_X_B3_SPANID);
+					}
 
-			$isSampled = null;
-			if(!empty($_SERVER['HTTP_X_B3_SAMPLED'])) {
-			    $isSampled = (bool) $_SERVER['HTTP_X_B3_SAMPLED'];
+					$HTTP_X_B3_SAMPLED = $app->getHeaderParams('HTTP_X_B3_SAMPLED');
+					if(!empty($HTTP_X_B3_SAMPLED)) {
+						$isSampled = (bool) $HTTP_X_B3_SAMPLED;
+					}else {
+						// 根前端设置采样率
+						$isSampled = new \whitemerry\phpkin\Sampler\PercentageSampler($this->percentageSampler);
+					}
+
+				}elseif($app->isRpcApp()) {
+					
+				}elseif($app->isWebsocketApp()) {
+
+				}
+
+				unset($app);
+				
 			}else {
-				// 根前端设置采样率
-				$isSampled = new \whitemerry\phpkin\Sampler\PercentageSampler($this->percentageSampler);
+				// php-fpm/apache的http
+				if(!empty($_SERVER['HTTP_X_B3_TRACEID'])) {
+				    $traceId = new TraceIdentifier($_SERVER['HTTP_X_B3_TRACEID']);
+				}
+
+				if (!empty($_SERVER['HTTP_X_B3_SPANID'])) {
+				    $traceSpanId = new SpanIdentifier($_SERVER['HTTP_X_B3_SPANID']);
+				}
+
+				if(!empty($_SERVER['HTTP_X_B3_SAMPLED'])) {
+				    $isSampled = (bool) $_SERVER['HTTP_X_B3_SAMPLED'];
+				}else {
+					// 根前端设置采样率
+					$isSampled = new \whitemerry\phpkin\Sampler\PercentageSampler($this->percentageSampler);
+				}
 			}
 
 			$this->tracer = new ZipkinTracer($local_span, $this->endpoint, $this->logger, $isSampled, $traceId, $traceSpanId);
 
-			!$is_back && $this->tracer->setProfile(Tracer::BACKEND);
-
-			$this->is_back = $is_back;
+			if($is_front) {
+				$this->tracer->setProfile(Tracer::BACKEND);
+			}else {
+				$this->tracer->setProfile(Tracer::FRONTEND);
+			}
+			$this->is_front = $is_front;
 
 		}
 
@@ -157,10 +189,10 @@ class ZipkinHander {
 		 * @return boolean
 		 */
 		public function isFrontend() {
-			if(!$this->is_back) {
-				return 1;
+			if($this->is_front) {
+				return true;
 			}
-			return 0;
+			return false;
 		}
 		
 		/**
